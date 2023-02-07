@@ -15,23 +15,94 @@ const CreatePost = () => {
   const [generatingImg, setGeneratingImg] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const generateImages =  () => {
+  const generateImages = async () => {
+    if (form.prompt) {
+
+      try {
+        setGeneratingImg(true)
+        const response = await fetch('http://localhost:8888/api/v1/dalle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ prompt: form.prompt }),
+        })
+
+        const data = await response.json();
+        console.log(data)
+        setForm({ ...form, photo: `data:image/jpeg;base64,${data.photo}` })
+      }
+      catch (err) {
+        alert(err.message)
+      }
+      finally {
+        setGeneratingImg(false)
+      }
+    } else {
+      alert('Please enter a prompt')
+    }
 
   }
+//http://localhost:8888/api/v1/posts
+  const handleSubmite = async (e) => {
+    e.preventDefault();
 
-  const handleSubmite = () => {
+    if(form.prompt && form.photo){
+        setLoading(true);
 
+        try{
+            const response = await fetch('http://localhost:8888/api/v1/post',{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json'
+                },
+                body:JSON.stringify({...form})
+            });
+
+          const res =   await response.json();
+          console.log(res)
+            alert('Success');
+            navigate('/');
+        }catch(err){
+            alert(err);
+        }finally{
+            setLoading(false);
+        }
+
+    }
+
+    // if (form.prompt && form.photo) {
+    //   setLoading(true);
+    //   try {
+    //     const response = await fetch('http://localhost:8888/api/v1/posts', {
+    //       method: 'POST',
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //       },
+    //       body: JSON.stringify({ ...form }),
+    //     });
+
+    //     await response.json();
+    //     alert('Success');
+    //     navigate('/');
+    //   } catch (err) {
+    //     alert(err);
+    //   } finally {
+    //     setLoading(false);
+    //   }
+    // } else {
+    //   alert('Please generate an image with proper details');
+    // }
   }
-
   const handleChange = (e) => {
-      setForm({...form, [e.target.name]: e.target.value})
+    setForm({ ...form, [e.target.name]: e.target.value })
 
   }
 
   const handleSurpriseMe = () => {
 
     const randomPrompt = getRandomPrompt(form.prompt);
-    setForm({...form, prompt: randomPrompt})
+    setForm({ ...form, prompt: randomPrompt })
 
   }
 
@@ -102,10 +173,10 @@ const CreatePost = () => {
 
             {
 
-              generatingImg  &&(
+              generatingImg && (
                 <div className='absolute inset-0 z-0 flex justify-center items-center bg-[rgba(0,0,0,0.5)]
                 rounded-lg'>
-                  <Loader/>
+                  <Loader />
 
                 </div>
               )
@@ -117,21 +188,21 @@ const CreatePost = () => {
         </div>
 
         <div className='mt-5 flex gap-5'>
-          <button className='text-white bg-green-700 font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center' 
-          type='button'
-          onClick={generateImages}
+          <button className='text-white bg-green-700 font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center'
+            type='button'
+            onClick={generateImages}
           >
-                {generatingImg ? 'Generating Image...' : 'Generate Image'}
+            {generatingImg ? 'Generating Image...' : 'Generate Image'}
           </button>
         </div>
 
         <div className='mt-10'>
-            <p
+          <p
             className='mt-2 text-[#666e75] text-[14px] '
-            >Once you have Created the image you want, you can share it with other in the community </p>
+          >Once you have Created the image you want, you can share it with other in the community </p>
           <button
-          type='submit'
-          className='mt-3 text-white bg-[#6469ff] font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center'
+            type='submit'
+            className='mt-3 text-white bg-[#6469ff] font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center'
           >
 
             {loading ? 'Sharing...' : 'Share with Community'}

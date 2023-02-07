@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react'
 import { Loader, Card, FormFeild } from '../components'
 
 
-const RenderCards = ({data, title}) => {
+const RenderCards = ({ data, title }) => {
 
-    if(data?.length>0)
-      return data.map((post) => <Card key={post.id} {...post} />)
+    if (data?.length > 0)
+        return data.map((post) => <Card key={post.id} {...post} />)
 
     return (
-   
-            <h2 className='mt-5 font-bold text-[#6449ff] text-xl uppercase' >
-                {title} 
-            </h2>
-      
+
+        <h2 className='mt-5 font-bold text-[#6449ff] text-xl uppercase' >
+            {title}
+        </h2>
+
     )
 
 }
@@ -23,6 +23,49 @@ const Home = () => {
     const [laoding, setLoading] = useState(false)
     const [allPosts, setAllPosts] = useState(null)
     const [searchText, setSearchText] = useState('');
+    const [searchResults, setSearchResults] = useState(null);
+    const [searchTimeout, setSearchTimeout] = useState(null);
+
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            try {
+                const response = await fetch('http://localhost:8888/api/v1/post', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+                if (response.ok) {
+
+                    const result = await response.json();
+                    console.log(result.data)
+                    setAllPosts(result.data.reverse())
+                }
+            } catch (error) {
+                alert(error.message)
+            }
+
+        }
+        fetchPosts();
+    }, []);
+
+    const handleSearchChange = (e) => {
+        clearTimeout(searchTimeout);
+        setSearchText(e.target.value)
+
+        setSearchTimeout(
+            setTimeout(() => {
+                const searchResults = allPosts.filter((item) => item.name.toLowerCase().includes(searchText.toLowerCase()) ||
+                    item.prompt.toLowerCase().includes(searchText.toLowerCase()))
+                setSearchResults(searchResults);
+
+            }, 500)
+
+        );
+    }
+
+
 
     return (
         <section className='max-w-7xl mx-auto'>
@@ -40,44 +83,46 @@ const Home = () => {
             </div>
 
             <div className='mt-16'>
-                <FormFeild/>
+                <FormFeild 
+                    
+                />
 
             </div>
 
             <div className='mt-10'>
 
                 {
-                    laoding ?(
+                    laoding ? (
                         <div className='flex justify-center items-center'>
-                                <Loader/>
+                            <Loader />
                         </div>
                     ) : (
                         <>
                             {
-                               searchText && (
-                               <h2 className='font-medium text-[#666e75] text-xl mb-3' >
-                                Showing results from <span className='text-[#222328]'>
-                                    {searchText}
-                                </span>
-                                 </h2>
-                               ) 
+                                searchText && (
+                                    <h2 className='font-medium text-[#666e75] text-xl mb-3' >
+                                        Showing results from <span className='text-[#222328]'>
+                                            {searchText}
+                                        </span>
+                                    </h2>
+                                )
                             }
                             <div className='grid lg:grid-cols-4 sm:grid-cols-3 xs:grid-cols-2 grid-cols-1 gap-3'>
-                                {  searchText ?(
-                                    <RenderCards 
-                                    data={[]}
-                                    title="No search results found" />
-                                ) :(
+                                {searchText ? (
+                                    <RenderCards
+                                        data={allPosts}
+                                        title="No search results found" />
+                                ) : (
 
-                                    <RenderCards  
-                                       data= {[]}
-                                       title="no Posts found"
+                                    <RenderCards
+                                        data={allPosts}
+                                        title="no Posts found"
 
                                     />
                                 )
-                            
-                            
-                            }
+
+
+                                }
                             </div>
                         </>
                     )
