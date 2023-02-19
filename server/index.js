@@ -20,6 +20,7 @@ app.get('/', async (req, res) => {
     });
   });
   
+  // connection to mongodb
 const startServer = async () => {
 
     try{
